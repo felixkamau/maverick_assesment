@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:maverick/services/auth_service.dart';
 
 class Home extends StatelessWidget {
@@ -8,26 +9,47 @@ class Home extends StatelessWidget {
   Widget build(BuildContext context) {
     final authService = AuthService();
     return Scaffold(
-      appBar: AppBar(title: Text("Home dash")),
+      appBar: AppBar(
+        title: Text("Home dash"),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Container(
+              width: 30,
+              height: 30,
+              // color: Colors.grey.withOpacity(.3),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(5),
+                border: Border.all(width: 1, color: Colors.grey),
+                color: Colors.grey.withOpacity(.3),
+              ),
+              child: Icon(Icons.settings),
+            ),
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: SafeArea(
           child: Column(
             children: [
-              Text(
-                "Welcome",
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 30,
-                  color: Colors.grey,
-                ),
+              //user profile icon
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 10,
+                children: [
+                  CircleAvatar(child: Icon(Icons.person)),
+                  Text(
+                    "Welcome",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 30,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
               ),
-
-              ElevatedButton(
-                onPressed: authService.logOut,
-                child: Text("logout"),
-              ),
-              // Analysis of sacco/group funds
+              //TODO tx/group plots
             ],
           ),
         ),
