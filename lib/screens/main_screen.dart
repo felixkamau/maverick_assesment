@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:maverick/features/dashboard/home.dart';
 import 'package:maverick/features/dashboard/wallet_screen.dart';
+import 'package:maverick/screens/create_group.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -12,7 +13,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedTabIndex = 0;
 
-  final List<Widget> _pages = [Home(), WalletScreen()];
+  final List<Widget> _pages = [Home(), WalletScreen(), CreateGroup()];
 
   void _tabs(int index) {
     setState(() {
