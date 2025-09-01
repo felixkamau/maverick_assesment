@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:maverick/features/auth/signup_screen.dart';
 import 'package:maverick/widgets/button.dart';
+import 'package:maverick/widgets/input_fields.dart';
+
+import '../../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,8 +17,9 @@ class _LoginScreenState extends State<LoginScreen> {
   // Text input controllers
   final _emailController = TextEditingController();
   final _pinController = TextEditingController();
+  final _authService = AuthService();
 
-  bool _obscure = false;
+  bool _obscure = true;
 
   void _toggleVisibility() {
     setState(() {
@@ -23,10 +27,22 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  void _login() async {
+    final email = _emailController.text;
+    final messenger = ScaffoldMessenger.of(context);
+    final pin = _pinController.text;
+    try {
+      await _authService.signInWithEmailAndPassword(email, pin);
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text("Error: $e")));
+    }
+  }
+
   //Mem clean up controllers
   @override
   void dispose() {
     _emailController.dispose();
+    _pinController.dispose();
     super.dispose();
   }
 
@@ -59,34 +75,48 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
                 const SizedBox(height: 5),
-                TextField(
-                  controller: _emailController,
-                  cursorColor: Colors.grey,
-                  cursorHeight: 20,
-                  decoration: InputDecoration(
-                    contentPadding: EdgeInsets.all(15),
-                    suffixIcon: Icon(Icons.email_outlined),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(width: 3, color: Colors.grey),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(
-                        color: Color.fromRGBO(255, 114, 94, 1),
-                        width: 3,
-                      ),
-                    ),
 
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    labelText: "Email",
-                    hint: Text("sacco@gmail.com"),
-                  ),
+                /// [refactor] split this to a reusable widget
+                // TextField(
+                //   controller: _emailController,
+                //   cursorColor: Colors.grey,
+                //   cursorHeight: 20,
+                //   decoration: InputDecoration(
+                //     contentPadding: EdgeInsets.all(15),
+                //     suffixIcon: Icon(Icons.email_outlined),
+                //     enabledBorder: OutlineInputBorder(
+                //       borderRadius: BorderRadius.circular(10),
+                //       borderSide: BorderSide(width: 3, color: Colors.grey),
+                //     ),
+                //     focusedBorder_: OutlineInputBorder(
+                //       borderRadius: BorderRadius.circular(10),
+                //       borderSide: BorderSide(
+                //         color: Color.fromRGBO(255, 114, 94, 1),
+                //         width: 3,
+                //       ),
+                //     ),
+                //
+                //     border: OutlineInputBorder(
+                //       borderRadius: BorderRadius.circular(10),
+                //     ),
+                //     labelText: "Email",
+                //     hint: Text("sacco@gmail.com"),
+                //   ),
+                // ),
+
+                /// TODO [replace with class impl maybe]
+                inputFields(
+                  obscure: false,
+                  hasObscureInput: false,
+                  controller: _emailController,
+                  suffixIcon: Icon(Icons.email_outlined),
+                  labelText: "Email",
+                  hintText: "sacco@gmail.com",
                 ),
 
                 const SizedBox(height: 15),
+
+                /// [refactored] to use custom input fields
                 TextField(
                   obscureText: _obscure,
                   obscuringCharacter: '*',
@@ -121,12 +151,27 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
+                /// [issues]
+                // inputFields(
+                //   controller: _pinController,
+                //   hasObscureInput: true,
+                //   obscure: _obscure,
+                //   obscuringChar: "*",
+                //   labelText: "pin",
+                //   hintText: "Pin",
+                //   suffixIcon: IconButton(
+                //     onPressed: _toggleVisibility,
+                //     icon: _obscure
+                //         ? Icon(Icons.visibility_off)
+                //         : Icon(Icons.visibility),
+                //   ),
+                // ),
                 const SizedBox(height: 15),
                 button(
                   buttonTxt: "login",
                   buttonW: double.infinity,
                   buttonH: 50,
-                  onPressed: () {},
+                  onPressed: _login,
                   buttonTxtStyle: TextStyle(color: Colors.white, fontSize: 18),
                   buttonColor: Color.fromRGBO(255, 114, 94, 1),
                 ),

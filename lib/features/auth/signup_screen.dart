@@ -13,10 +13,23 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final _authService = AuthService();
-  final _obscure = true;
+  bool _pinConfirmationObscure = true;
+  bool _pinAuthObscure = true;
   final _emailController = TextEditingController();
   final _pinAuthController = TextEditingController();
   final _pinAuthConfirmController = TextEditingController();
+
+  void _togglePinConfirmationVisibility() {
+    setState(() {
+      _pinConfirmationObscure = !_pinConfirmationObscure;
+    });
+  }
+
+  void _togglePinVisibility() {
+    setState(() {
+      _pinAuthObscure = !_pinAuthObscure;
+    });
+  }
 
   // Signup
   void signup() async {
@@ -81,7 +94,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
                 const SizedBox(height: 5),
                 TextField(
-                  // controller: _emailController,
+                  controller: _emailController,
                   cursorColor: Colors.grey,
                   cursorHeight: 20,
                   decoration: InputDecoration(
@@ -89,12 +102,13 @@ class _SignupScreenState extends State<SignupScreen> {
                     suffixIcon: Icon(Icons.email_outlined),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(width: 3, color: Colors.grey),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide: BorderSide(
                         color: Color.fromRGBO(255, 114, 94, 1),
-                        width: 2,
+                        width: 3,
                       ),
                     ),
 
@@ -107,19 +121,27 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 15),
                 TextField(
+                  controller: _pinAuthController,
                   cursorColor: Colors.grey,
                   cursorHeight: 20,
+                  obscureText: _pinAuthObscure,
                   decoration: InputDecoration(
                     contentPadding: EdgeInsets.all(15),
-                    suffixIcon: Icon(Icons.pin),
+                    suffixIcon: IconButton(
+                      onPressed: _togglePinVisibility,
+                      icon: _pinAuthObscure
+                          ? Icon(Icons.visibility_off)
+                          : Icon(Icons.visibility),
+                    ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(width: 3, color: Colors.grey),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide: BorderSide(
                         color: Color.fromRGBO(255, 115, 94, 1),
-                        width: 2,
+                        width: 3,
                       ),
                     ),
                     border: OutlineInputBorder(
@@ -131,19 +153,27 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 15),
                 TextField(
+                  controller: _pinAuthConfirmController,
                   cursorColor: Colors.grey,
                   cursorHeight: 20,
+                  obscureText: _pinConfirmationObscure,
                   decoration: InputDecoration(
                     contentPadding: EdgeInsets.all(15),
-                    suffixIcon: Icon(Icons.pin),
+                    suffixIcon: IconButton(
+                      onPressed: _togglePinConfirmationVisibility,
+                      icon: _pinConfirmationObscure
+                          ? Icon(Icons.visibility_off)
+                          : Icon(Icons.visibility),
+                    ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(width: 3, color: Colors.grey),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide: BorderSide(
                         color: Color.fromRGBO(255, 115, 94, 1),
-                        width: 2,
+                        width: 3,
                       ),
                     ),
                     border: OutlineInputBorder(
@@ -189,9 +219,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => LoginScreen()
-                      ),
+                      MaterialPageRoute(builder: (context) => LoginScreen()),
                     );
                   },
                   child: Text(

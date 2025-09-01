@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:maverick/features/dashboard/home.dart';
 import 'package:maverick/features/dashboard/wallet_screen.dart';
 import 'package:maverick/screens/create_group.dart';
+import 'package:maverick/screens/groups.dart';
+import 'package:maverick/screens/settings_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -13,7 +15,13 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedTabIndex = 0;
 
-  final List<Widget> _pages = [Home(), WalletScreen(), CreateGroup()];
+  final List<Widget> _pages = [
+    Home(),
+    CreateGroup(),
+    WalletScreen(),
+    Groups(),
+    SettingsScreen(),
+  ];
 
   void _tabs(int index) {
     setState(() {
@@ -32,6 +40,8 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ),
         child: BottomNavigationBar(
+          selectedItemColor: Colors.deepOrangeAccent,
+          unselectedItemColor: Colors.grey,
           currentIndex: _selectedTabIndex,
           onTap: _tabs,
           items: [
@@ -39,11 +49,19 @@ class _MainScreenState extends State<MainScreen> {
               icon: Icon(Icons.home, size: 30),
               label: '',
             ),
+            BottomNavigationBarItem(icon: Icon(Icons.add, size: 30), label: ''),
             BottomNavigationBarItem(
               icon: Icon(Icons.wallet_outlined),
               label: '',
             ),
-            BottomNavigationBarItem(icon: Icon(Icons.add, size: 30), label: ''),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.groups_outlined, size: 30),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.settings, size: 30),
+              label: '',
+            ),
           ],
         ),
       ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:maverick/features/auth/intro/onboarding.dart';
-import 'package:maverick/features/auth/login_screen.dart';
-import 'package:maverick/main_screen.dart';
+import 'package:maverick/screens/main_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthGate extends StatelessWidget {

@@ -3,8 +3,6 @@ import 'package:maverick/features/auth/intro/intro_one.dart';
 import 'package:maverick/features/auth/intro/intro_three.dart';
 import 'package:maverick/features/auth/intro/intro_two.dart';
 import 'package:maverick/features/auth/login_screen.dart';
-import 'package:maverick/features/dashboard/home.dart';
-import 'package:maverick/features/dashboard/wallet_screen.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class Onboarding extends StatefulWidget {

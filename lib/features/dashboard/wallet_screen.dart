@@ -1,7 +1,12 @@
 import 'package:currency_converter/currency.dart';
 import 'package:currency_converter/currency_converter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:hive_flutter/adapters.dart';
 import 'package:intl/intl.dart';
+import 'package:maverick/models/transaction.dart';
+import 'package:maverick/widgets/button.dart';
+import 'package:maverick/widgets/not_found.dart';
 
 import '../../mockdata/transactions.dart';
 
@@ -13,6 +18,10 @@ class WalletScreen extends StatefulWidget {
 }
 
 class _WalletScreenState extends State<WalletScreen> {
+  final txBox = Hive.box<TransactionModel>('transactions');
+  final _recipientController = TextEditingController();
+  final _txAmountController = TextEditingController();
+
   static const List<String> _currencyList = <String>[
     'KSH',
     'USD',
@@ -27,6 +36,9 @@ class _WalletScreenState extends State<WalletScreen> {
   // Store the converted balance for display
   double _displayBalance = 10000.345;
   final String _obscureCharacter = '*';
+  String _selectedGroup = '';
+  bool _isLoading = false;
+
   // Convert currency codes to Currency enum
   Currency _getCurrencyFromString(String currencyCode) {
     switch (currencyCode) {
@@ -83,10 +95,151 @@ class _WalletScreenState extends State<WalletScreen> {
     }
   }
 
+  void _sendFunds() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final modalFormKey = GlobalKey<FormState>();
+
+    showModalBottomSheet(
+      useSafeArea: true,
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          height: MediaQuery.of(context).size.height,
+          color: Colors.white24,
+          child: Form(
+            key: modalFormKey,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _recipientController,
+                    decoration: _buildInputDecoration("Recipient"),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return "Please enter recipient name";
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: _txAmountController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                    ],
+                    decoration: _buildInputDecoration("Amount to send"),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return "Please enter amount";
+                      }
+                      final amount = double.tryParse(value);
+                      if (amount == null || amount <= 0) {
+                        return "Please enter a valid amount";
+                      }
+                      // Check if amount exceeds balance
+                      if (amount > _displayBalance) {
+                        return "Insufficient funds";
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  _isLoading
+                      ? CircularProgressIndicator()
+                      : button(
+                          buttonTxt: "Send",
+                          buttonW: double.infinity,
+                          onPressed: () async {
+                            if (modalFormKey.currentState!.validate()) {
+                              setState(() {
+                                _isLoading = true;
+                              });
+
+                              try {
+                                // Capture values BEFORE clearing or closing modal
+                                final recipient = _recipientController.text
+                                    .trim();
+                                final amount =
+                                    double.tryParse(
+                                      _txAmountController.text.trim(),
+                                    ) ??
+                                    0;
+
+                                // Save to Hive
+                                await txBox.add(
+                                  TransactionModel(
+                                    recipient: recipient,
+                                    dateTx: DateTime.now(),
+                                    txAmount: amount,
+                                    currency: _dropdownValue,
+                                    isCredit:
+                                        false, // This should be false for outgoing transactions
+                                  ),
+                                );
+
+                                // Clear the form controllers
+                                _recipientController.clear();
+                                _txAmountController.clear();
+
+                                // Close the modal
+                                Navigator.pop(context);
+
+                                // Show success message
+                                messenger.showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Transaction sent successfully',
+                                    ),
+                                  ),
+                                );
+                              } catch (e) {
+                                messenger.showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Error processing transaction: $e',
+                                    ),
+                                  ),
+                                );
+                              } finally {
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              }
+                            }
+                          },
+                          buttonTxtStyle: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16,
+                          ),
+                          buttonColor: Color.fromRGBO(255, 144, 94, 1),
+                        ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _toggleBalVisibility() {
     setState(() {
       _balanceVisibility = !_balanceVisibility;
     });
+  }
+
+  @override
+  void dispose() {
+    _recipientController.dispose();
+    _txAmountController.dispose();
+    super.dispose();
   }
 
   @override
@@ -106,6 +259,10 @@ class _WalletScreenState extends State<WalletScreen> {
 
                 // const Divider(color: Colors.grey, thickness: 2),
                 // Incoming and outgoing transaction
+                // CTA
+                _buildCTASection(),
+                const SizedBox(height: 10),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -147,7 +304,8 @@ class _WalletScreenState extends State<WalletScreen> {
                   ],
                 ),
                 const SizedBox(height: 5),
-                _buildTransactionList(),
+                // _buildTransactionList(),
+                _buildTxHive(),
               ],
             ),
           ),
@@ -246,43 +404,87 @@ class _WalletScreenState extends State<WalletScreen> {
       itemBuilder: (context, index) {
         final tx = incomingOutgoingTx[index];
         return ListTile(
+          contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
           leading: Icon(Icons.money_rounded, color: Colors.green),
           title: Text(
             tx["name"],
             style: TextStyle(fontWeight: FontWeight.bold),
+            overflow: TextOverflow.ellipsis,
           ),
-          // subtitle: Text(tx["txType"], style: TextStyle(color: Colors.grey)),
           subtitle: tx["isCredit"]
               ? Text("Incoming", style: TextStyle(color: Colors.grey))
               : Text("Outgoing", style: TextStyle(color: Colors.grey)),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // tx["type"] == "Incoming"
-              //     ? Icon(Icons.arrow_downward, color: Colors.green)
-              //     : Icon(Icons.arrow_upward, color: Colors.red),
-              Text(
-                "${tx['currency']} ${tx["amount"].toStringAsFixed(2)}",
-                style: TextStyle(
-                  // color: tx["type"] != "Incoming" ? Colors.red : Colors.green,
-                  color: tx["isCredit"] ? Colors.green : Colors.red,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                ),
+          trailing: Container(
+            constraints: BoxConstraints(maxWidth: 120),
+            child: Text(
+              "${tx['currency']} ${tx["amount"].toStringAsFixed(2)}",
+              style: TextStyle(
+                color: tx["isCredit"] ? Colors.green : Colors.red,
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
               ),
-            ],
+              textAlign: TextAlign.right,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         );
       },
     );
   }
 
+  Widget _buildTxHive() {
+    return ValueListenableBuilder(
+      valueListenable: txBox.listenable(),
+      builder:
+          (BuildContext context, Box<TransactionModel> transactionsBox, _) {
+            if (transactionsBox.isEmpty) {
+              return notFound(
+                context: context,
+                assetImg: 'assets/animations/notfound.json',
+                text: "No Recent Transactions",
+              );
+            }
+
+            final transactions = transactionsBox.values.toList();
+
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: transactions.length,
+              separatorBuilder: (_, _) =>
+                  Divider(color: Colors.grey, radius: BorderRadius.circular(4)),
+              itemBuilder: (context, index) {
+                final tx = transactions[index];
+
+                return ListTile(
+                  leading: CircleAvatar(child: Icon(Icons.person)),
+                  title: Text(
+                    tx.recipient,
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(DateFormat.yMMMd().format(tx.dateTx)),
+                  trailing: Text(
+                    "${tx.currency} ${tx.txAmount.toStringAsFixed(2)}",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: tx.isCredit ? Colors.green : Colors.red,
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+    );
+  }
+
+  /// [refactor]  to buildList on listenable from our hive models
   //Recent Traction ListTile
   Widget _buildTransactionList() {
     return ListView.separated(
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
-      itemCount: transactions.length - 2,
+      itemCount: transactions.length - 2, // pagination
       separatorBuilder: (_, _) =>
           Divider(color: Colors.grey, radius: BorderRadius.circular(4)),
       itemBuilder: (context, index) {
@@ -304,6 +506,71 @@ class _WalletScreenState extends State<WalletScreen> {
           ),
         );
       },
+    );
+  }
+
+  InputDecoration _buildInputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(
+          width: 2,
+          color: Color.fromRGBO(255, 144, 95, 1),
+        ),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderSide: const BorderSide(width: 2, color: Colors.grey),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderSide: const BorderSide(width: 2, color: Colors.red),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderSide: const BorderSide(width: 2, color: Colors.red),
+        borderRadius: BorderRadius.circular(10),
+      ),
+    );
+  }
+
+  Widget _buildCTASection() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        button(
+          buttonTxt: "Send",
+          onPressed: _sendFunds,
+          buttonTxtStyle: TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 18,
+            color: Colors.white,
+          ),
+          buttonColor: Color.fromRGBO(255, 144, 94, 1),
+        ),
+        button(
+          buttonTxt: "Withdraw",
+          onPressed: () {
+            showModalBottomSheet(
+              useSafeArea: true,
+              context: context,
+              builder: (BuildContext context) {
+                return Container(
+                  height: MediaQuery.of(context).size.height,
+                  color: Colors.white24,
+                );
+              },
+            );
+          },
+          buttonTxtStyle: TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 18,
+            color: Colors.white,
+          ),
+          buttonColor: Color.fromRGBO(255, 144, 94, 1),
+        ),
+      ],
     );
   }
 }
