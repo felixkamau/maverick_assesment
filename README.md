@@ -1,16 +1,24 @@
 # maverick
 
-A new Flutter project.
+## Full Name
+[Felix Ngugi]
 
-## Getting Started
+## Target User Segment
+["This app is intended for groups or Saccos pooling funds, managing group members]
 
-This project is a starting point for a Flutter application.
+## Summary of Features Implemented
+*   **Feature 1:** [Authentication with supabase. e.g., "User Authentication: Allows users to sign up and log in using email and password."]
+*   **Feature 2:** [CRUD operations. e.g., "Group Creation, simulated fund sending"]
+*   **Feature 3:** [Add Members to groups. e.g., "Members Listing: Displays all members based on the group."]
 
-A few resources to get you started if this is your first Flutter project:
+## Tech Stack and Libraries Used
+*   **Programming Language:** Flutter/dart
+*   **Architecture:** [Architecture]
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Setup Instructions to Run the App
+1.  **Prerequisites:**
+    *   Android Studio 
+    
+2.  **Clone the Repository:**
+    * signup and begin 
+    
