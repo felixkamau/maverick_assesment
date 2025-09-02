@@ -17,7 +17,6 @@ The goal is to provide an easy way for groups to manage shared money, keep track
 * **Send & Receive Simulation**: Users can send funds to other members and simulate receiving contributions.
 * **CRUD Operations for Groups**: Create groups, add members, and manage contributions.
 * **Transaction History**: Full transaction list with filters for type and date.
-* **Profile & Settings**: Update user profile info, reset PIN, and toggle light/dark mode.
 * **Local Storage**: Wallet and transaction history stored locally for offline access.
 
 ## 🛠 Tech Stack and Libraries Used
