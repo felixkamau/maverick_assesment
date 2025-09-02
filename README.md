@@ -1,7 +1,5 @@
 # Maverick Assessment — Flutter 
 
-## Full Name
-
 **Felix Ngugi**
 
 ## 🎯 Target User Segment
