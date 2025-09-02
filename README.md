@@ -83,7 +83,6 @@ This separation ensures:
 In underserved markets like student groups and SACCOs, managing shared funds is often manual and lacks transparency.
 This prototype simulates:
 
-* **Ease of access** through PIN and biometric login.
 * **Transparency** with group transaction history and balances.
 * **Inclusivity** by supporting multiple currencies for local and international contributions.
 The aim is to show how a **mobile-first financial tool** can help small groups build trust, manage funds, and grow their communities.
